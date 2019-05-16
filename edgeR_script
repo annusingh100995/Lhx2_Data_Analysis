@@ -1,0 +1,32 @@
+data = read.table("~/MOUSE/count_mod.txt", header=T, row.names=1, com='')
+col_ordering = c(1,2,3,4)
+rnaseqMatrix = data[,col_ordering]
+rnaseqMatrix = round(rnaseqMatrix)
+#Use cpm filter
+#rnaseqMatrix = rnaseqMatrix[rowSums(rnaseqMatrix)>=2,]
+conditions = factor(c(rep("WT", 2), rep("KO", 2)))
+exp_study = DGEList(counts=rnaseqMatrix, group=conditions)
+exp_study = calcNormFactors(exp_study)
+exp_study = estimateCommonDisp(exp_study)
+exp_study = estimateTagwiseDisp(exp_study)
+et = exactTest(exp_study, pair=c("WT", "KO"))
+tTags = topTags(et,n=NULL)
+write.table(tTags, file='counts.matrix.WT_vs_KO.edgeR.DE_results', sep='    ', quote=F, row.names=T)
+# summary of DE gene
+is.de = decideTestsDGE(et, p.value = 0.05)
+summary(is.de)
+
+svg("./WT_KO.smearplot2.svg")
+detags <- rownames(exp_study)[as.logical(is.de)]
+plotSmear(et, de.tags=rownames(et)[is.de!=0])
+abline(h = c(-0.58, 0.58), col = "blue")
+dev.off()
+#write DE tables
+sig_DE=tTags[tTags$table$FDR<0.01,]
+write.table(sig_DE, file='sig_DE', sep='\t', quote=F, row.names=T)
+#upregulated
+up_sig_DE=sig_DE[sig_DE$table$logFC>0.58,]
+write.table(up_sig_DE, file='up_sig_DE', sep='\t', quote=F, row.names=T)
+#downregulated
+down_sig_DE=sig_DE[sig_DE$table$logFC<(-0.58),]
+write.table(down_sig_DE, file='down_sig_DE', sep='\t', quote=F, row.names=T)

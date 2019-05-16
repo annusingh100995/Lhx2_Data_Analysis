@@ -1,0 +1,21 @@
+cuff=readCufflinks("./diff_out_mouse/", rebuild = TRUE)
+
+diff_genes=diffData(genes(cuff))
+
+sig_diff_genes=subset(diff_genes,(diff_genes$significant=='yes'))
+
+myGeneIds=sig_diff_genes$gene_id
+
+myGenes=getGenes(cuff, myGeneIds)
+
+csVolcano(genes(cuff), 'WT','KO', alpha=0.05, showSignificant=TRUE,features=TRUE, xlimits = c(-20, 20))
+
+h = csHeatmap(myGenes,clustering = 'both')
+h
+
+
+b = expressionBarplot(myGenes)
+annn
+
+DGELIST = cbind(myGenes@annotation$gene_id, myGenes@annotation$gene_short_name)
+head(DGELIST)
